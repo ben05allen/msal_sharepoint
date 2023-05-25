@@ -7,14 +7,11 @@ from dotenv import load_dotenv
 
 # load sensitive information
 load_dotenv()
-
-
 client_id = os.getenv('CLIENT_ID')
 thumbprint = os.getenv('THUMBPRINT')
 tenant_id = os.getenv('TENANT_ID')
 organization = os.getenv('ORGANIZATION')
 site = os.getenv('SITE')
-authority = f'https://login.microsoftonline.com/{tenant_id}'
 
 
 # Sharepoint requires certificate authentification
@@ -30,13 +27,14 @@ cert = {
     'thumbprint': thumbprint,
 }
 
+authority = f'https://login.microsoftonline.com/{tenant_id}'
+sharepoint_scopes = [f'https://{organization}.sharepoint.com/.default']
+
 msal_app = ConfidentialClientApplication(
     client_id=client_id,
     authority=authority,
     client_credential=cert,
 )
-
-sharepoint_scopes = [f'https://{organization}.sharepoint.com/.default']
 
 result = msal_app.acquire_token_for_client(scopes=sharepoint_scopes)
 access_token = result.get('access_token')
