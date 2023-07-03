@@ -1,9 +1,7 @@
-import os
-from msal import ConfidentialClientApplication
-import requests
-from pprint import pprint
 from dotenv import load_dotenv
-
+import os
+from pprint import pprint
+from sharepoint import SharePoint
 
 # load sensitive information
 load_dotenv()
@@ -11,7 +9,8 @@ client_id = os.getenv('CLIENT_ID')
 thumbprint = os.getenv('THUMBPRINT')
 tenant_id = os.getenv('TENANT_ID')
 organization = os.getenv('ORGANIZATION')
-site = os.getenv('SITE')
+site_id = os.getenv('SITE_ID')
+drive_id = os.getenv('DRIVE_ID')
 
 
 # Sharepoint requires certificate authentification
@@ -22,31 +21,19 @@ site = os.getenv('SITE')
 with open('key.pem') as f:
     private_key = str(f.read())
 
-cert = {
-    'private_key': private_key,
-    'thumbprint': thumbprint,
-}
-
-authority = f'https://login.microsoftonline.com/{tenant_id}'
-sharepoint_scopes = [f'https://{organization}.sharepoint.com/.default']
-
-msal_app = ConfidentialClientApplication(
+sp = SharePoint(
+    tenant_id=tenant_id,
     client_id=client_id,
-    authority=authority,
-    client_credential=cert,
+    organization=organization,
+    private_key=private_key,
+    thumbprint=thumbprint,
 )
 
-result = msal_app.acquire_token_for_client(scopes=sharepoint_scopes)
-access_token = result.get('access_token')
-headers = {
-    'Authorization': f'Bearer {access_token}',
-    'Accept': 'application/json;odata=verbose',
-    'Content-Type': 'application/json',
-}
+# site_response = sp.get_sharepoint_site(site_id)
+# pprint(site_response)
 
-sharepoint_base_url = f'https://{organization}.sharepoint.com/sites/{site}'
-sharepoint_url = f'{sharepoint_base_url}/_api/web/sitegroups'
-response = requests.get(url=sharepoint_url, headers=headers)
 
-print(response.status_code)
-pprint(response.json())
+drive_response = sp.get_files(drive_id=site_id, 
+                              root_child='Accelerate', 
+                              folder_name='Booster')
+pprint(drive_response)
